@@ -20,7 +20,7 @@ services:
       - mongodb
       
   frontend:
-  container_name: wanderlust-frontend
+    container_name: wanderlust-frontend
     build: ./frontend
     env_file: 
       - ./frontend/.env.sample
