@@ -7,7 +7,7 @@ DATE - 19 April 2024
 
 Step 1: It is a three-tier project: a frontend on React, a backend on Node, and a Mongo DB. I have added a Dockerfile to both folders, i.e., FRONTEND and BACKEND.
 
-Step 2: Also, for more advanced concepts, I have added Jenkinsfile for the CI/CD automation.
+Step 2: For more advanced concepts, I have added Jenkinsfile to both folders to create separate pipelines and integrated Sonarqube for static code analysis and CI/CD automation.
 
 Step 3: Run the three docker containers in the same network to enable communication between them. So for this, follow the below steps and run the following commands:
         
