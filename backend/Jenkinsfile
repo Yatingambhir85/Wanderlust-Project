@@ -1,0 +1,45 @@
+pipeline{
+  agent any 
+  tools{
+    jdk 'jdk17'
+    nodejs 'node18'
+  }
+  environment{
+    SONAR_HOME = tool 'sonar-scanner'
+  }
+  stages{
+    stage("Clean Workspace"){
+      steps{
+        cleanWs()
+      }
+    }
+    stage("Git Checkout"){
+      steps {
+                // Checkout code from the repository, excluding certain directories
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          extensions: [[$class: 'CheckoutOption', timeout: 1], [$class: 'CleanBeforeCheckout'], [$class: 'DisableRemotePoll'], [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'backend/']]]],
+                          userRemoteConfigs: [[url: 'https://github.com/Yatingambhir85/wanderlust/']]])
+            } 
+    }
+    stage("SONAR-SCANNING"){
+      steps{
+        withSonarQubeEnv('sonar-server'){
+          sh '$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=wanderlust-backend -Dsonar.projectKey=wanderlust-backend'
+        }
+      }
+    }
+    stage("Docker build"){
+      steps{
+        sh 'docker build -t wanderlust-backend backend/.'
+  }
+    }
+    stage("Docker deployment"){
+      steps{
+        sh 'docker stop wanderlust-backend-project && docker rm wanderlust-backend-project || true'
+        sh 'docker cp backend/data/sample_posts.json mongo:/data/sample_posts.json'
+        sh 'docker run -itd --name wanderlust-backend-project -p 5000:5000 --network wanderlust-network wanderlust-backend'
+      }
+    }
+}
+}

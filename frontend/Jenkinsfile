@@ -1,0 +1,44 @@
+pipeline{
+  agent any 
+  tools{
+    jdk 'jdk17'
+    nodejs 'node18'
+  }
+  environment{
+    SONAR_HOME = tool 'sonar-scanner'
+  }
+  stages{
+    stage("Clean Workspace"){
+      steps{
+        cleanWs()
+      }
+    }
+    stage("Git Checkout"){
+     steps {
+                // Checkout code from the repository, excluding certain directories
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/main']],
+                          extensions: [[$class: 'CheckoutOption', timeout: 1], [$class: 'DisableRemotePoll'], [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'frontend/']]]],
+                          userRemoteConfigs: [[url: 'https://github.com/Yatingambhir85/wanderlust/']]])
+            } 
+    }
+    stage("SONAR-SCANNING"){
+      steps{
+        withSonarQubeEnv('sonar-server'){
+          sh '$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=wanderlust-frontend -Dsonar.projectKey=wanderlust-frontend'
+        }
+      }
+    }
+    stage("Docker build"){
+      steps{
+            sh 'docker build -t wanderlust-frontend-pro frontend/.'
+      }
+    }
+  stage("Docker deployment"){
+    steps{
+          sh 'docker stop wanderlust-frontend && docker rm wanderlust-frontend || true'
+          sh ' docker run -itd --name wanderlust-frontend -p 5173:5173 --network wanderlust-network wanderlust-frontend-pro'
+    }
+  }
+}
+}
